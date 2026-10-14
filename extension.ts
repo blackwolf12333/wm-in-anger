@@ -46,6 +46,7 @@ class Window {
   }
   
   destroy(): void {
+    log("Destroying window", this.window?.get_title());
     if (this.monitorChangedId) {
       this.window.disconnect(this.monitorChangedId);
     }
@@ -67,7 +68,12 @@ class Windows {
     return this.windows.find(w => w.window = window);
   }
   
+  remove(window: Window): void {
+    this.windows = this.windows.filter(w => w !== window);
+  }
+
   destroy(): void {
+    log("Destroying all windows");
     this.windows.forEach(window => window.destroy());
     // @ts-ignore manual memory management
     this.windows = null;
@@ -86,19 +92,21 @@ class Workspace {
   }
   
   onWindowAdded(_workspace: Meta.Workspace, window: Meta.Window): void {
-    log("Window added");
+    log("Window added", window.get_title());
     this.windows.add(window);
   }
   onWindowRemoved(_workspace: Meta.Workspace, window: Meta.Window): void {
-    log("Window removed");
+    log("Window removed", window.get_title());
     const w = this.windows.find(window);
     
     if (w) {
+      this.windows.remove(w);
       w.destroy();
     }
   }
   
   destroy(): void {
+    log("Destroying workspace", this.workspace.index());
     if (this.windowAddedId) {
       this.workspace.disconnect(this.windowAddedId);
       this.windowAddedId = null;
@@ -123,6 +131,8 @@ export default class MultiMonitorWM extends Extension {
   
   private workspaceAddedId: number|null = null;
   private workspaceRemovedId: number|null = null;
+  private workspaceReorderedId: number|null = null;
+  private workspaceSwitchedId: number|null = null;
   
   private workspaces: Workspaces = new Workspaces();
   
@@ -150,7 +160,7 @@ export default class MultiMonitorWM extends Extension {
   }
   
   onWorkspaceAdded(manager: Meta.WorkspaceManager, num: number): void {
-    log("Workspace added");
+    log("Workspace added", num);
     const workspace = manager.get_workspace_by_index(num);
     
     if (workspace === null) {
@@ -162,12 +172,20 @@ export default class MultiMonitorWM extends Extension {
   }
   
   onWorkspaceRemoved(manager: Meta.WorkspaceManager, num: number): void {
-    log("Workspace removed");
+    log("Workspace removed", num);
     const workspace = this.workspaces.pop(num);
-    
+
     if (workspace) {
       workspace.destroy();
     }
+  }
+
+  onWorkspaceReordered(manager: Meta.WorkspaceManager): void {
+    log("Workspace reordered");
+  }
+
+  onWorkspaceSwitched(manager: Meta.WorkspaceManager, from: number, to: number, direction: Meta.MotionDirection): void {
+    log("Workspace switched", from, to, direction);
   }
   
   private connectSignals(): void {
@@ -176,6 +194,8 @@ export default class MultiMonitorWM extends Extension {
     
     this.workspaceAddedId = global.workspaceManager.connect('workspace-added', this.onWorkspaceAdded.bind(this));
     this.workspaceRemovedId = global.workspaceManager.connect('workspace-removed', this.onWorkspaceRemoved.bind(this));
+    this.workspaceReorderedId = global.workspaceManager.connect('workspaces-reordered', this.onWorkspaceReordered.bind(this));
+    this.workspaceSwitchedId = global.workspaceManager.connect('workspace-switched', this.onWorkspaceSwitched.bind(this));
     
   }
 
@@ -187,6 +207,14 @@ export default class MultiMonitorWM extends Extension {
     if (this.workspaceRemovedId) {
       global.workspaceManager.disconnect(this.workspaceRemovedId);
       this.workspaceRemovedId = null;
+    }
+    if (this.workspaceReorderedId) {
+      global.workspaceManager.disconnect(this.workspaceReorderedId);
+      this.workspaceReorderedId = null;
+    }
+    if (this.workspaceSwitchedId) {
+      global.workspaceManager.disconnect(this.workspaceSwitchedId);
+      this.workspaceSwitchedId = null;
     }
     
     if (this.monitorsChangedId) {
