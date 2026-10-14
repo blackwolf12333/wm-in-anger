@@ -3,6 +3,7 @@
   "description": "Improves the experience with window management on multiple monitors",
   "uuid": "multimonitorwm@blackwolf12333.github.io",
   "shell-version": [
-    "50"
+    "50",
+    "51"
   ]
 }
