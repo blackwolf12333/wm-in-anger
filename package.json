@@ -1,0 +1,28 @@
+{
+  "name": "multimonitorwm",
+  "version": "0.0.0",
+  "description": "Changes window management behavior on multiple monitors",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blackwolf12333/multimonitorwm.git"
+  },
+  "author": "Peter Maatman <blackwolf12333@gmail.com>",
+  "license": "LGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/blackwolf12333/multimonitorwm/issues"
+  },
+  "homepage": "https://github.com/blackwolf12333/multimonitorwm#readme",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@girs/gjs": "^4.1.0",
+    "@girs/gnome-shell": "^50.0.4"
+  }
+}
